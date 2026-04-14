@@ -1,4 +1,4 @@
-import postgres from 'postgres';
+import { neon } from '@neondatabase/serverless';
 import {
   CustomerField,
   CustomersTableType,
@@ -9,20 +9,12 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+// Initialize Neon client
+const sql = neon(process.env.POSTGRES_URL!);
 
 export async function fetchRevenue() {
   try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
-
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
-
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
-
-    // console.log('Data fetch completed after 3 seconds.');
-
     return data;
   } catch (error) {
     console.error('Database Error:', error);
@@ -52,9 +44,6 @@ export async function fetchLatestInvoices() {
 
 export async function fetchCardData() {
   try {
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
     const invoiceCountPromise = sql`SELECT COUNT(*) FROM invoices`;
     const customerCountPromise = sql`SELECT COUNT(*) FROM customers`;
     const invoiceStatusPromise = sql`SELECT
@@ -156,8 +145,7 @@ export async function fetchInvoiceById(id: string) {
 
     const invoice = data.map((invoice) => ({
       ...invoice,
-      // Convert amount from cents to dollars
-      amount: invoice.amount / 100,
+      amount: invoice.amount / 100, // Convert amount from cents to dollars
     }));
 
     return invoice[0];
@@ -187,22 +175,22 @@ export async function fetchCustomers() {
 export async function fetchFilteredCustomers(query: string) {
   try {
     const data = await sql<CustomersTableType[]>`
-		SELECT
-		  customers.id,
-		  customers.name,
-		  customers.email,
-		  customers.image_url,
-		  COUNT(invoices.id) AS total_invoices,
-		  SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
-		  SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
+        SELECT
+          customers.id,
+          customers.name,
+          customers.email,
+          customers.image_url,
+          COUNT(invoices.id) AS total_invoices,
+          SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END) AS total_pending,
+          SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END) AS total_paid
+        FROM customers
+        LEFT JOIN invoices ON customers.id = invoices.customer_id
+        WHERE
+          customers.name ILIKE ${`%${query}%`} OR
         customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+        GROUP BY customers.id, customers.name, customers.email, customers.image_url
+        ORDER BY customers.name ASC
+      `;
 
     const customers = data.map((customer) => ({
       ...customer,
