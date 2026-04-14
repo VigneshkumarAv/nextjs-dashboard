@@ -14,7 +14,7 @@ const sql = neon(process.env.POSTGRES_URL!);
 
 export async function fetchRevenue() {
   try {
-    const data = await sql<Revenue[]>`SELECT * FROM revenue`;
+    const data = await sql`SELECT * FROM revenue`;
     return data;
   } catch (error) {
     console.error('Database Error:', error);
@@ -24,7 +24,7 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
-    const data = await sql<LatestInvoiceRaw[]>`
+    const data = await sql`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
@@ -82,7 +82,7 @@ export async function fetchFilteredInvoices(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const invoices = await sql<InvoicesTable[]>`
+    const invoices = await sql`
       SELECT
         invoices.id,
         invoices.amount,
@@ -133,7 +133,7 @@ export async function fetchInvoicesPages(query: string) {
 
 export async function fetchInvoiceById(id: string) {
   try {
-    const data = await sql<InvoiceForm[]>`
+    const data = await sql`
       SELECT
         invoices.id,
         invoices.customer_id,
@@ -157,7 +157,7 @@ export async function fetchInvoiceById(id: string) {
 
 export async function fetchCustomers() {
   try {
-    const customers = await sql<CustomerField[]>`
+    const customers = await sql`
       SELECT
         id,
         name
@@ -174,7 +174,7 @@ export async function fetchCustomers() {
 
 export async function fetchFilteredCustomers(query: string) {
   try {
-    const data = await sql<CustomersTableType[]>`
+    const data = await sql`
         SELECT
           customers.id,
           customers.name,

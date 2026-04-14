@@ -5,8 +5,19 @@ import { lusitana } from '@/app/ui/fonts';
 import { fetchCardData, fetchLatestInvoices, fetchRevenue } from '../lib/data';
  
 export default async function Page() {
-  const revenue = await fetchRevenue();
-  const latestInvoices = await fetchLatestInvoices();
+  const revenueData = await fetchRevenue();
+  const revenue = revenueData.map((item: Record<string, any>) => ({
+    month: item.month,
+    revenue: item.revenue,
+  }));
+  const latestInvoicesData = await fetchLatestInvoices();
+  const latestInvoices = latestInvoicesData.map((item: Record<string, any>) => ({
+    id: item.id || '',
+    name: item.name || '',
+    image_url: item.image_url || '',
+    email: item.email || '',
+    amount: item.amount || '',
+  }));
   const {
     numberOfInvoices,
     numberOfCustomers,
