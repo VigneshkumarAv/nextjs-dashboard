@@ -107,6 +107,7 @@ export async function GET() {
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
     console.error('Database seeding error:', error);
-    return Response.json({ error: error.message || 'Unknown error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return Response.json({ error: errorMessage }, { status: 500 });
   }
 }
